@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta http-equiv="X-UA-Compatible" content="ie=edge"/>
+  <title>UIUC Salary</title>
+  
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+
+      <style>
+    body {
+        font-family: 'Open Sans', sans-serif;
+        }
+
+div#container {
+  width: 800px;
+  height: 600px;
+  margin: auto;
+  background-color: lightblue;
+}
+
+.bar {
+  fill: darkorange;
+}
+
+.bar:hover {
+  fill: orange;
+}
+
+text {
+    font-size: 13px;
+}
+
+.labels {
+    font-size: 20px;
+}
+
+  .tooltip{
+      position      : absolute;
+      text-align    : center;
+      max-width     : 70px;
+      max-height    : 90px;
+      padding       : 8px;
+      margin-top    : -30px;
+      font          : 11px 'Open Sans';
+      background    : lightgreen;
+      color         : black;
+      pointer-events: none;
+  }
+
+  </style>
+
+  <script src="https://d3js.org/d3.v4.min.js"></script>
+</head>
+
+   <body>
+
+    <p> We can better understand University of Illinois operations by examining their salaries paid out to colleges, departments, and positions. <br>We will look at the top 10 colleges, departments, and positions paid by University of Illinois. This data ONLY looks at academic units, hourly/non-academic salaries are not included. </p>
+
+    <p> The second chart looks at the total sum of salaries paid for each department across ALL campuses. Basically, this looks at how much money is being paid to employees in each department. <br>You can see which campus each department belongs to by hovering over the bars. </p>
+        <div id='container'>
+            <svg width="650" height="500" ></svg>
+        </div>
+        <div>
+        <a href="index.html" style="padding-left: 550px; font-size: 20px;">Back</a>
+        <a href="page3.html" style="padding-left: 700px; font-size: 20px;">Next</a>
+        </div>
+   </body>
+   <script>
+    var svg = d3.select("svg"),
+    margin = {top: 20, right: 20, bottom: 120, left: 130},
+    width = +svg.attr("width") - margin.left - margin.right,
+    height = +svg.attr("height") - margin.top - margin.bottom;
+
+    var x = d3.scaleBand().rangeRound([1, width]).padding(0.3),
+    y = d3.scaleLinear().rangeRound([height, 0]);
+
+    var g = svg.append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    d3.csv("chart2.csv", function(d) {
+    d.Salary = +d.Salary;
+    return d;
+    }, function(error, file) {
+        if (error) throw error;
+
+  var data = file.filter(function(d,i) { 
+    return  i < 10
+  });
+
+  x.domain(data.map(function(d) { return d.Department; }));
+  y.domain([0, d3.max(data, function(d) { return d.Salary; })]);
+
+  g.append("g")
+      .attr("transform", "translate(0," + height + ")")
+      .call(d3.axisBottom(x))
+         .selectAll("text")	
+        .style("text-anchor", "end")
+        .attr("dx", "-.8em")
+        .attr("dy", ".15em")
+        .attr("transform", "rotate(-25)");
+
+  g.append("g")
+      .call(d3.axisLeft(y).ticks(10, "$,f"))
+
+  g.selectAll(".bar")
+    .data(data)
+    .enter().append("rect")
+      .attr("class", "bar")
+      .attr("x", function(d) { return x(d.Department); })
+      .attr("y", function(d) { return y(d.Salary); })
+      .attr("width", x.bandwidth())
+      .attr("height", function(d) { return height - y(d.Salary); })
+        .on('mouseover', mouseover)
+        .on('mousemove', mousemove)
+        .on('mouseout', mouseout);
+
+    svg
+      .append('text')
+      .attr('x', -250)
+      .attr('y', 20)
+      .attr('class', 'labels')
+      .attr('transform', 'rotate(-90)')
+      .attr('text-anchor', 'middle')
+      .text('Salary')
+
+    svg.append('text')
+      .attr('x', 325)
+      .attr('y', 490)
+      .attr('class', 'labels')
+      .text('Department')
+
+    svg.append('text')
+      .attr('class', 'labels')
+      .attr('x', 400)
+      .attr('y', 40)
+      .attr('text-anchor', 'middle')
+      .text('UIUC Department Salary')
+
+    var div = d3.select('#container').append('div')
+        .attr('class', 'tooltip')
+        .style('display', 'none');
+    function mouseover(){
+        div.style('display', 'inline');
+    }
+    function mousemove(){
+        var d = d3.select(this).data()[0]
+        div
+            .html(d.Campus_name + '<hr/>' + d.College_Name)
+            .style('left', (d3.event.pageX - 20) + 'px')
+            .style('top', (d3.event.pageY - 15) + 'px');
+    }
+    function mouseout(){
+        div.style('display', 'none');
+    }
+
+});
+
+
+   </script>
+</html>
